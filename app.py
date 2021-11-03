@@ -2,34 +2,47 @@ import requests
 
 token = ''
 auth = False
-link = 'https://lyambda123244.herokuapp.com'
+email = ''
+link = 'https://lyabmda12345.herokuapp.com/'
 
 def request(method, t_bool, args):
+    global token
     res = ''
     if t_bool:
-        res = requests.get(f'{link}/{method}?session_token={token}&{args}').json()
+        res = requests.get(f'{link}/{method}?token={t_bool}&{args}')
     else:
-        res = requests.get(f'{link}/{method}?{args}').json()
-    return res
+        res = requests.get(f'{link}/{method}?{args}')
+    if res.status_code == 200:
+        return res.json()
+    else:
+        print(res.status_code)
+        print(res.text)
 
 class Auth():
     def sendCode(email):
         res = request('sendCode', False, f'email={email}')
         if res['ok']:
-            token = res['session_token']
-            auth = res['is_authenticated']
+            print('Code send to email...')
         else:
             raise Exception(res['description'])
 
     def join(code):
-        res = ''
-        if (auth):  # login
-            res = request('login', True, f'code={code}')
+        res = request('signIn', False, f'email={email}&code={code}')
+        token = res['token']
+        if (res['is_auth']):  # login
+            pass
         else:       # register
-            res = request('register', True, f'code={code}')
+            Auth.register(token)
+        return token
 
-    def logout():
-        res = request('logOut', True, '')
+    def register(token):
+        name = input("Name >>> ")
+        surname = input("Surname >>> ")
+        description = input("Description >>> ")
+        res = request('register', token, f'name={name}&surname={surname}&description={description}&code={code}')
+
+    def logout(token):
+        res = request('logOut', token, '')
         raise Exception('You loged out!')
 
 class Group():
@@ -37,15 +50,15 @@ class Group():
         #res = request('createGroup', True, f'')
         pass
 
-    def joinGroup(id_group):
+    def joinGroup(token, id_group):
         #res = request('joinGroup', True, f'')
         pass
 
-    def sendMessage(id_group, text):
+    def sendMessage(token, id_group, text):
         #res = request('sendMessage', True, f'')
         pass
 
-    def getMessages(id_group):
+    def getMessages(token, id_group):
         #res = request('getMessages', True, f'')
         pass
 
@@ -61,7 +74,7 @@ class InputBox():
 email = input('Email >>> ')
 Auth.sendCode(email)
 code = input('Code >>> ')
-Auth.join(code)
+token = Auth.join(code)
 
 # ...
 
