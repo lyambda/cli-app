@@ -42,7 +42,6 @@ class Group():
         pass
 
     def sendMessage(id_group, text):
-        #res = requests.get(f'{link}/sendMessage?session_token={token}').json()
         #res = request('sendMessage', True, f'')
         pass
 
