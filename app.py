@@ -1,7 +1,5 @@
 import requests, json
 
-auth = False
-email = ''
 link = 'https://lyabmda12345.herokuapp.com/'
 
 def config():
@@ -34,7 +32,6 @@ class Auth():
     def join(code):
         res = request('signIn', False, f'email={email}&code={code}')
         token = res['token']
-        print(token)
         f = open(f'config.json', "w")
         f.write('''{"token": "''' + token + '''"}''')
         if (res['is_auth']):  # login
@@ -44,6 +41,7 @@ class Auth():
         return token
 
     def register():
+        print('You need register:')
         name = input(" Name >>> ")
         surname = input(" Surname >>> ")
         description = input(" Description >>> ")
@@ -106,10 +104,11 @@ class InputBox():
 while True:
     if config():
         while True:
-            text = input("Input: ")
+            text = input("Input command: ")
             InputBox.funcs(text)
     else:
-        email = input('Email >>> ')
+        print('You need auth:')
+        email = input(' Email >>> ')
         Auth.sendCode(email)
-        code = input('Code >>> ')
+        code = input(' Code >>> ')
         token = Auth.join(code)
