@@ -1,51 +1,62 @@
 import requests, json
 
-link = 'https://lyabmda12345.herokuapp.com/'
+link = 'https://lyabmda.herokuapp.com/'
 
 def config():
-    f = open(f'config.json', "r")
-    settings = json.loads(f.read())
-    token = settings["token"]
+    with open('config.json') as jsonfile:
+        config1 = json.load(jsonfile)
+    token = config1["token"]
+    print(token)
     return token
 
 def request(method, t_bool, args):
-    token = config()
     res = ''
     if t_bool:
-        res = requests.get(f'{link}/{method}?token={token}&{args}')
+        a = {'token': config()}
+        if args != '':
+            res = requests.post(f'{link}/{method}', data={**a, **args})
+        else:
+            res = requests.post(f'{link}/{method}', data=a)
     else:
-        res = requests.get(f'{link}/{method}?{args}')
+        res = requests.post(f'{link}/{method}', data=args)
+    print(res.status_code)
+    print(res.text)
+
     if res.status_code == 200:
         return res.json()
-    else:
-        print(res.status_code)
-        print(res.text)
 
 class Auth():
     def sendCode(email):
-        res = request('sendCode', False, f'email={email}')
+        res = request('sendCode', False, {'email': email})
         if res['ok']:
             print('Code send to email...')
         else:
             raise Exception(res['description'])
 
     def join(code):
-        res = request('signIn', False, f'email={email}&code={code}')
-        token = res['token']
+        res = request('signIn', False, {'email': email, 'code': code})
+        tokene = res['token']
         f = open(f'config.json', "w")
-        f.write('''{"token": "''' + token + '''"}''')
+        f.write('''{"token": "''' + tokene + '''"}''')
         if (res['is_auth']):  # login
             pass
         else:       # register
-            Auth.register(token)
-        return token
+            Auth.register()
+        return tokene
 
     def register():
         print('You need register:')
         name = input(" Name >>> ")
         surname = input(" Surname >>> ")
         description = input(" Description >>> ")
-        res = request('register', True, f'name={name}&surname={surname}&description={description}&code={code}')
+        res = request('register', True, 
+            {
+                'name': name, 
+                'surname': surname, 
+                'description': description, 
+                'code': code
+            }
+        )
 
     def logout():
         res = request('logOut', True, '')
@@ -58,28 +69,34 @@ class Group():
         name = input(" Name >>> ")
         link = input(" Link >>> ")
         description = input(" Description >>> ")
-        res = request('createGroup', True, f'name={name}&link={link}&description={description}')
+        res = request('createGroup', True, 
+            {
+                'name': name, 
+                'link': link, 
+                'description': description
+            }
+        )
         return res
 
     def joinGroup():
         id_group = input(" Group ID >>> ")
-        res = request('joinGroup', True, f'id_group={id_group}')
+        res = request('joinGroup', True, {'id_group': id_group})
         return res
 
     def sendMessage():
         id_group = input(" Group ID >>> ")
         text = input(" Text >>> ")
-        res = request('sendMessage', True, f'id_group={id_group}&text={text}')
+        res = request('sendMessage', True, {'id_group': id_group, 'text': text})
         return res
 
     def getMessages():
         id_group = input(" Group ID >>> ")
-        res = request('getMessages', True, f'id_group={id_group}')
+        res = request('getMessages', True, {'id_group': id_group})
         return res
 
 class Profile():
     def _me():
-        res = res = request('me', True, f'')
+        res = res = request('me', True, '')
         return res
 
 class InputBox():
@@ -101,14 +118,17 @@ class InputBox():
         except Exception as e:
             print(f"Error: {e}")
 
-while True:
-    if config():
-        while True:
-            text = input("Input command: ")
-            InputBox.funcs(text)
-    else:
-        print('You need auth:')
-        email = input(' Email >>> ')
-        Auth.sendCode(email)
-        code = input(' Code >>> ')
-        token = Auth.join(code)
+def box():
+    while True:
+        text = input("Input command: ")
+        InputBox.funcs(text)
+
+if config():
+    box()
+else:
+    print('You need auth:')
+    email = input(' Email >>> ')
+    Auth.sendCode(email)
+    code = input(' Code >>> ')
+    Auth.join(code)
+    box()
